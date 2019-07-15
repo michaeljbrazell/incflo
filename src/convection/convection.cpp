@@ -341,17 +341,22 @@ void incflo::ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel_in, R
             } // Cut cells
         } // MFIter
     } // Levels
+
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
+
 }
 //
 // Compute the slopes of each velocity component in all three directions.
 //
 void incflo::ComputeVelocitySlopes(int lev, MultiFab& Sborder)
 {
-	BL_PROFILE("incflo::ComputeVelocitySlopes");
+    BL_PROFILE("incflo::ComputeVelocitySlopes");
 
     EB_set_covered(Sborder, covered_val);
 
-	Box domain(geom[lev].Domain());
+    Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -545,6 +550,10 @@ void incflo::ComputeVelocitySlopes(int lev, MultiFab& Sborder)
             });
 		}
 	}
+	
+#ifdef AMREX_USE_CUDA
+	Gpu::Device::synchronize();
+#endif
 
 	xslopes[lev]->FillBoundary(geom[lev].periodicity());
 	yslopes[lev]->FillBoundary(geom[lev].periodicity());
