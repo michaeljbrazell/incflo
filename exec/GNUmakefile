@@ -2,6 +2,7 @@
 # Parallelisation options
 USE_MPI = TRUE
 USE_OMP = FALSE
+USE_CUDA = TRUE
 
 # Debug mode?
 DEBUG = FALSE

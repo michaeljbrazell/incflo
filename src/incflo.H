@@ -97,6 +97,11 @@ public:
     int get_probtype(){ return probtype; }
     void GetInputBCs();
 
+  // get CUDA to compile
+	void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
+	void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
+  //
+
 private:
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -150,8 +155,6 @@ private:
 	void ComputeUGradU(Vector<std::unique_ptr<MultiFab>>& conv,
 					   Vector<std::unique_ptr<MultiFab>>& vel, 
                        Real time);
-	void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
-	void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
