@@ -111,11 +111,13 @@ void incflo::ReadParameters()
         pp.query("fluid_model", fluid_model);
         if(fluid_model == "newtonian")
         {
-            amrex::Print() << "Newtonian fluid with"
+	  fluid_model_num = _newtonian;
+          amrex::Print() << "Newtonian fluid with"
                            << " mu = " << mu << std::endl;
         }
         else if(fluid_model == "powerlaw")
         {
+	  fluid_model_num = _powerlaw;
             pp.query("n", n);
             AMREX_ALWAYS_ASSERT(n > 0.0);
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(n != 1.0,
@@ -127,6 +129,7 @@ void incflo::ReadParameters()
         }
         else if(fluid_model == "bingham")
         {
+	  fluid_model_num = _bingham;
             pp.query("tau_0", tau_0);
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(tau_0 > 0.0,
                     "No point in using Bingham rheology with tau_0 = 0");
@@ -142,6 +145,7 @@ void incflo::ReadParameters()
         }
         else if(fluid_model == "hb")
         {
+	  fluid_model_num = _hb;
             pp.query("n", n);
             AMREX_ALWAYS_ASSERT(n > 0.0);
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(n != 1.0,
@@ -163,6 +167,7 @@ void incflo::ReadParameters()
         }
         else if(fluid_model == "smd")
         {
+	  fluid_model_num = _smd;
             pp.query("n", n);
             AMREX_ALWAYS_ASSERT(n > 0.0);
 

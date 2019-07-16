@@ -317,7 +317,15 @@ private:
     Real tau_0 = 0.0;
     Real papa_reg = 0.0;
     Real eta_0 = 0.0;
-
+  // for GPUs which don't yet support strings
+  int fluid_model_num;
+  const int _newtonian = 10;
+  const int _powerlaw = 20;
+  const int _bingham = 30;
+  const int _hb = 40;
+  const int _smd = 50;
+  ////
+  
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
     // Input / Output
