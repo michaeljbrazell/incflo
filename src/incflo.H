@@ -98,9 +98,10 @@ public:
     void GetInputBCs();
 
   // get CUDA to compile
-	void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
-	void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
+  void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
+  void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
   //
+  void ComputeStrainrate();
 
 private:
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +173,6 @@ private:
 
     void UpdateDerivedQuantities();
 	void ComputeDivU(Real time);
-	void ComputeStrainrate();
 	void ComputeVorticity();
 	void ComputeViscosity();
 
