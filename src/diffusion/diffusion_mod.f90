@@ -41,7 +41,7 @@ contains
    subroutine compute_divtau(lo, hi,                   &
                              divtau, dlo, dhi,         &
                              vel_in, vinlo, vinhi,     &
-                             vel, vtlo, vthi,     &
+                             vel, vtlo, vthi,          &
                              eta, ro, slo, shi,        &
                              domlo, domhi,             &
                              bc_ilo_type, bc_ihi_type, &
@@ -87,14 +87,10 @@ contains
       ! Temporary array just to handle bc's
       integer(c_int) :: vlo(3), vhi(3)
 
-      ! hack
-!      real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
-
-      integer(c_int)                 :: i, j, k, n
+      integer(c_int)                 :: i, j, k
       real(rt)                       :: idx, idy, idz
       real(rt)                       :: du, dv, dw
 
-      real(rt)  :: txx, tyy, tzz
       real(rt)  :: eta_e, eta_w, eta_n, eta_s, eta_t, eta_b
       real(rt)  :: txx_e, txx_w, txy_n, txy_s, txz_t, txz_b
       real(rt)  :: txy_e, txy_w, tyy_n, tyy_s, tyz_t, tyz_b
@@ -106,9 +102,6 @@ contains
 
       vlo = lo - ng
       vhi = hi + ng
-
-      ! hack
-!      call amrex_allocate( vel, vlo(1), vhi(1)  , vlo(2), vhi(2)  , vlo(3), vhi(3)  , 1, 3)
 
       ! Put values into ghost cells so we can easy take derivatives
       call fill_vel_diff_bc(vel_in, vinlo, vinhi, vel, lo, hi, domlo, domhi, ng, &
