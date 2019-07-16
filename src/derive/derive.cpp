@@ -104,9 +104,9 @@ void incflo::ComputeStrainrate()
 		    Real wz = (vel_fab(i  ,j  ,k+1,2) - vel_fab(i  ,j  ,k-1,2)) * idz;
                
 		    // The factor half is included here instead of in each of the above
-		    strainrate_fab(i,j,k,0) = 0.5 * 
-		      sqrt(2. * ux*ux + 2. * vy*vy + 2. * wz*wz + 
-			   (uy + vx)*(uy + vx) + (vz + wy)*(vz + wy) + (wx + uz)*(wx + uz));
+		    strainrate_fab(i,j,k) = 0.5 * 
+		      sqrt(2. * pow(ux,2) + 2. * pow(vy,2) + 2. * pow(wz,2) + 
+			   pow(uy + vx,2) + pow(vz + wy,2) + pow(wx + uz,2));
 		  });
                 }
                 else
@@ -169,20 +169,18 @@ void incflo::ComputeVorticity()
                     const auto& vel_arr = Sborder.array(mfi);
                     const auto& vort_arr = vort[lev]->array(mfi);
 
-                    for(int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-                    for(int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-                    for(int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-                    {
-                        Real vx = (vel_arr(i+1, j  , k  , 1) - vel_arr(i-1, j  , k  , 1)) * idx;
-                        Real wx = (vel_arr(i+1, j  , k  , 2) - vel_arr(i-1, j  , k  , 2)) * idx;
-                        Real uy = (vel_arr(i  , j+1, k  , 0) - vel_arr(i  , j-1, k  , 0)) * idy;
-                        Real wy = (vel_arr(i  , j+1, k  , 2) - vel_arr(i  , j-1, k  , 2)) * idy;
-                        Real uz = (vel_arr(i  , j  , k+1, 0) - vel_arr(i  , j  , k-1, 0)) * idz;
-                        Real vz = (vel_arr(i  , j  , k+1, 1) - vel_arr(i  , j  , k-1, 1)) * idz;
+		    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
+		    {
+		      Real vx = (vel_arr(i+1, j  , k  , 1) - vel_arr(i-1, j  , k  , 1)) * idx;
+		      Real wx = (vel_arr(i+1, j  , k  , 2) - vel_arr(i-1, j  , k  , 2)) * idx;
+		      Real uy = (vel_arr(i  , j+1, k  , 0) - vel_arr(i  , j-1, k  , 0)) * idy;
+		      Real wy = (vel_arr(i  , j+1, k  , 2) - vel_arr(i  , j-1, k  , 2)) * idy;
+		      Real uz = (vel_arr(i  , j  , k+1, 0) - vel_arr(i  , j  , k-1, 0)) * idz;
+		      Real vz = (vel_arr(i  , j  , k+1, 1) - vel_arr(i  , j  , k-1, 1)) * idz;
                         
-                        // The factor half is included here instead of in each of the above
-                        vort_arr(i,j,k) = 0.5 * sqrt(pow(wy - vz, 2) + pow(uz - wx, 2) + pow(vx - uy, 2));
-                    }
+		      // The factor half is included here instead of in each of the above
+		      vort_arr(i,j,k) = 0.5 * sqrt(pow(wy - vz, 2) + pow(uz - wx, 2) + pow(vx - uy, 2));
+                    });
                 }
                 else
                 {
@@ -195,4 +193,8 @@ void incflo::ComputeVorticity()
             }
         }
     }
+    
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
 }

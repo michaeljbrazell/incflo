@@ -102,7 +102,8 @@ public:
   void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
   //
   void ComputeStrainrate();
-
+  void ComputeVorticity();
+  
 private:
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -173,7 +174,6 @@ private:
 
     void UpdateDerivedQuantities();
 	void ComputeDivU(Real time);
-	void ComputeVorticity();
 	void ComputeViscosity();
 
     //////////////////////////////////////////////////////////////////////////////////////////////
