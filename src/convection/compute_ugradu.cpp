@@ -257,26 +257,26 @@ incflo::incflo_compute_ugradu( Box& bx,
       (v(i,j+1,k) - v(i,j,k)) * idy + 
       (w(i,j,k+1) - w(i,j,k)) * idz;
     
-    ugradu(i,j,k,1) = (u(i+1,j,k) * u_e - u(i,j,k) * u_w) * idx + 
+    ugradu(i,j,k,0) = (u(i+1,j,k) * u_e - u(i,j,k) * u_w) * idx + 
       (v(i,j+1,k) * u_n - v(i,j,k) * u_s) * idy + 
       (w(i,j,k+1) * u_t - w(i,j,k) * u_b) * idz - 
-      velocity(i,j,k,1) * divumac;
-    ugradu(i,j,k,2) = (u(i+1,j,k) * v_e - u(i,j,k) * v_w) * idx + 
+      velocity(i,j,k,0) * divumac;
+    ugradu(i,j,k,1) = (u(i+1,j,k) * v_e - u(i,j,k) * v_w) * idx + 
       (v(i,j+1,k) * v_n - v(i,j,k) * v_s) * idy + 
       (w(i,j,k+1) * v_t - w(i,j,k) * v_b) * idz - 
-      velocity(i,j,k,2) * divumac;
-    ugradu(i,j,k,3) = (u(i+1,j,k) * w_e - u(i,j,k) * w_w) * idx + 
+      velocity(i,j,k,1) * divumac;
+    ugradu(i,j,k,2) = (u(i+1,j,k) * w_e - u(i,j,k) * w_w) * idx + 
       (v(i,j+1,k) * w_n - v(i,j,k) * w_s) * idy + 
       (w(i,j,k+1) * w_t - w(i,j,k) * w_b) * idz - 
-      velocity(i,j,k,3) * divumac;
+      velocity(i,j,k,2) * divumac;
 
     // // ****************************************************
     // // Return the negative
     // // ****************************************************
     
+    ugradu(i,j,k,0) = -ugradu(i,j,k,0);
     ugradu(i,j,k,1) = -ugradu(i,j,k,1);
     ugradu(i,j,k,2) = -ugradu(i,j,k,2);
-    ugradu(i,j,k,3) = -ugradu(i,j,k,3);
     
   });
 
