@@ -63,4 +63,9 @@ contains
       not_equal = (abs(x-y) >= epsilon(x))
    end function not_equal
 
+   real(rt) function get_my_huge() bind(C)
+     get_my_huge = my_huge
+     return
+   end function get_my_huge
+
 end module constant

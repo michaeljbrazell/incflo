@@ -16,6 +16,25 @@
 #include <MacProjection.H>
 #include <PoissonEquation.H>
 
+// Boundary conditions list auxiliary structure
+//
+typedef class BcList {
+  public:
+  BcList(const int pinf, const int pout, const int minf, const int nsw)
+      : pinf_(pinf)
+      , pout_(pout) 
+      , minf_(minf)
+      , nsw_(nsw)
+  {}
+
+    int get_pinf() const {return pinf_;};
+    int get_pout() const {return pout_;};
+    int get_minf() const {return minf_;};
+    int get_nsw() const {return nsw_;};
+  private:
+  int pinf_, pout_, minf_, nsw_;
+} BcList;
+
 
 class incflo : public AmrCore
 {
@@ -100,8 +119,35 @@ public:
   // get CUDA to compile
 	void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
 	void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
-  //
+      void incflo_compute_ugradu( Box& bx,
+                              Vector< std::unique_ptr<MultiFab> >& conv,
+                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              Vector< std::unique_ptr<MultiFab> >& u_mac,
+                              Vector< std::unique_ptr<MultiFab> >& v_mac,
+                              Vector< std::unique_ptr<MultiFab> >& w_mac,
+                              MFIter* mfi,
+                              Box& domain,
+                              const int lev);
 
+    void incflo_compute_ugradu_eb( Box& bx,
+                                 Vector< std::unique_ptr<MultiFab> >& conv,
+                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 Vector< std::unique_ptr<MultiFab> >& u_mac,
+                                 Vector< std::unique_ptr<MultiFab> >& v_mac,
+                                 Vector< std::unique_ptr<MultiFab> >& w_mac,
+                                 MFIter* mfi,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+                                 Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+                                 const amrex::MultiFab* volfrac,
+                                 const amrex::MultiCutFab* bndrycent,
+                                 Box& domain,
+                                 const EBCellFlagFab& flags,
+                                 const int lev);
+
+  //
+protected:
+  const BcList bc_list;
+  
 private:
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
