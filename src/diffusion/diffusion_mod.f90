@@ -41,6 +41,7 @@ contains
    subroutine compute_divtau(lo, hi,                   &
                              divtau, dlo, dhi,         &
                              vel_in, vinlo, vinhi,     &
+                             vel, vtlo, vthi,     &
                              eta, ro, slo, shi,        &
                              domlo, domhi,             &
                              bc_ilo_type, bc_ihi_type, &
@@ -56,6 +57,7 @@ contains
 
       ! Array bounds
       integer(c_int),  intent(in   ) :: vinlo(3), vinhi(3)
+      integer(c_int),  intent(in   ) ::  vtlo(3),  vthi(3)
       integer(c_int),  intent(in   ) ::   slo(3),   shi(3)
       integer(c_int),  intent(in   ) ::   dlo(3),   dhi(3)
       integer(c_int),  intent(in   ) :: domlo(3), domhi(3)
@@ -68,8 +70,9 @@ contains
          & vel_in(vinlo(1):vinhi(1),vinlo(2):vinhi(2),vinlo(3):vinhi(3),3), &
          &     ro(  slo(1):  shi(1),  slo(2):  shi(2),  slo(3):  shi(3)  ), &
          &    eta(  slo(1):  shi(1),  slo(2):  shi(2),  slo(3):  shi(3)  )
-
-      real(rt),        intent(inout) ::                        &
+      
+      real(rt),        intent(inout) :: &
+         &    vel( vtlo(1): vthi(1), vtlo(2): vthi(2), vtlo(3): vthi(3),3), &
          & divtau(  dlo(1):  dhi(1),  dlo(2):  dhi(2),  dlo(3):  dhi(3),3)
 
       ! BC types
@@ -83,7 +86,9 @@ contains
 
       ! Temporary array just to handle bc's
       integer(c_int) :: vlo(3), vhi(3)
-      real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
+
+      ! hack
+!      real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
 
       integer(c_int)                 :: i, j, k, n
       real(rt)                       :: idx, idy, idz
@@ -101,14 +106,16 @@ contains
 
       vlo = lo - ng
       vhi = hi + ng
-      call amrex_allocate( vel, vlo(1), vhi(1)  , vlo(2), vhi(2)  , vlo(3), vhi(3)  , 1, 3)
+
+      ! hack
+!      call amrex_allocate( vel, vlo(1), vhi(1)  , vlo(2), vhi(2)  , vlo(3), vhi(3)  , 1, 3)
 
       ! Put values into ghost cells so we can easy take derivatives
       call fill_vel_diff_bc(vel_in, vinlo, vinhi, vel, lo, hi, domlo, domhi, ng, &
                             bc_ilo_type, bc_ihi_type, &
                             bc_jlo_type, bc_jhi_type, &
                             bc_klo_type, bc_khi_type)
-
+      
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
@@ -238,8 +245,6 @@ contains
             end do
          end do
       end do
-
-      call amrex_deallocate(vel)
 
    end subroutine compute_divtau
 

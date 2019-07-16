@@ -19,6 +19,7 @@ contains
    subroutine compute_divtau_eb(lo, hi,  &
                                 divtau, dlo, dhi,    &
                                 vel_in, vinlo, vinhi,&
+                                vel, vtlo, vthi,     &
                                 eta, ro, slo, shi,   &
                                 flags,    flo,  fhi, &
                                 afrac_x, axlo, axhi, &
@@ -47,6 +48,7 @@ contains
       ! Array bounds
       integer(c_int),  intent(in   ) ::  dlo(3),  dhi(3)
       integer(c_int),  intent(in   ) ::vinlo(3),vinhi(3)
+      integer(c_int),  intent(in   ) :: vtlo(3), vthi(3)
       integer(c_int),  intent(in   ) ::  slo(3),  shi(3)
       integer(c_int),  intent(in   ) ::  flo(3),  fhi(3)
       integer(c_int),  intent(in   ) :: axlo(3), axhi(3)
@@ -77,7 +79,8 @@ contains
            &   bcent(  blo(1):  bhi(1),  blo(2):  bhi(2),  blo(3):  bhi(3),3)
 
       real(rt),  intent(inout) ::                                 &
-         divtau(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3),3)
+            vel(vtlo(1):vthi(1),vtlo(2):vthi(2),vtlo(3):vthi(3),3), &
+         divtau( dlo(1): dhi(1), dlo(2) :dhi(2), dlo(3): dhi(3),3)
 
       integer,  intent(in   ) :: &
          flags(flo(1):fhi(1),flo(2):fhi(2),flo(3):fhi(3))
@@ -96,7 +99,6 @@ contains
 
       ! Temporary array just to handle bc's
       integer(c_int) :: vlo(3), vhi(3)
-      real(rt), dimension(:,:,:,:), pointer, contiguous :: vel
 
       ! Temporary array to handle viscous fluxes at the cell faces (staggered)
       ! Just reserve space for the tile + 3 ghost layers
@@ -117,7 +119,6 @@ contains
 
       vlo = lo - ng
       vhi = hi + ng
-      call amrex_allocate(vel, vlo(1), vhi(1), vlo(2), vhi(2), vlo(3), vhi(3), 1, 3)
 
       ! Put values into ghost cells so we can easy take derivatives
       ! TODO: is this necessary? We have filled 
@@ -190,8 +191,6 @@ contains
             end do
          end do
       end do
-
-      call amrex_deallocate(vel)
 
    end subroutine compute_divtau_eb
 

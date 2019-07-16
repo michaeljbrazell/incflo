@@ -10,7 +10,8 @@ extern "C"
   void compute_divtau (
           const int* lo, const int* hi,
           amrex::Real* divtau, const int* dlo, const int* dhi,
-          const amrex::Real* vel  , const int* vlo, const int* vhi,
+          const amrex::Real* vel_in,   const int* vilo, const int* vihi,
+          const amrex::Real* vel_temp, const int* vtlo, const int* vthi,
           const amrex::Real* eta   ,
           const amrex::Real* ro   , const int* slo, const int* shi,
           const int* domlo, const int* domhi,
@@ -22,7 +23,8 @@ extern "C"
   void compute_divtau_eb (
           const int* lo, const int* hi,
           amrex::Real* divtau, const int* dlo, const int* dhi,
-          const amrex::Real* vel  , const int* vlo, const int* vhi,
+          const amrex::Real* vel_in, const int* vilo, const int* vihi,
+          const amrex::Real* vel_temp, const int* vtlo, const int* vthi,
           const amrex::Real* eta   , 
           const amrex::Real* ro   , const int* slo, const int* shi,
           const void* flag, const int* fglo, const int* fghi,

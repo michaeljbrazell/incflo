@@ -39,7 +39,10 @@ void incflo::ComputeDivTau(int lev,
 
         // Tilebox
         Box bx = mfi.tilebox();
+	Box bx_grow = amrex::grow(bx,nghost);
 
+	FArrayBox vel_temp(bx_grow,3);
+	
         // this is to check efficiently if this tile contains any eb stuff
         const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
         const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
@@ -55,6 +58,7 @@ void incflo::ComputeDivTau(int lev,
                 compute_divtau(BL_TO_FORTRAN_BOX(bx),
                                BL_TO_FORTRAN_ANYD(divtau_in[mfi]),
                                BL_TO_FORTRAN_ANYD((*vel_in[lev])[mfi]),
+			       BL_TO_FORTRAN_ANYD(vel_temp),
                                (*eta[lev])[mfi].dataPtr(),
                                BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
                                domain.loVect (), domain.hiVect (),
@@ -68,6 +72,7 @@ void incflo::ComputeDivTau(int lev,
                 compute_divtau_eb(BL_TO_FORTRAN_BOX(bx),
                                   BL_TO_FORTRAN_ANYD(divtau_in[mfi]),
                                   BL_TO_FORTRAN_ANYD((*vel_in[lev])[mfi]),
+				  BL_TO_FORTRAN_ANYD(vel_temp),
                                   (*eta[lev])[mfi].dataPtr(),
                                   BL_TO_FORTRAN_ANYD((*ro[lev])[mfi]),
                                   BL_TO_FORTRAN_ANYD(flags),
