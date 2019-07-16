@@ -120,6 +120,11 @@ void incflo::ComputeStrainrate()
             }
         }
     }
+    
+#ifdef AMREX_USE_CUDA
+    Gpu::Device::synchronize();
+#endif
+
 }
 
 void incflo::ComputeVorticity()
