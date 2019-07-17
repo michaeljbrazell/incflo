@@ -6,8 +6,6 @@
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
-#include <AMReX_MLEBABecLap.H>
-#include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_PhysBCFunct.H>
 #include <AMReX_iMultiFab.H>
 
@@ -205,14 +203,6 @@ private:
   void ComputeUGradU(Vector<std::unique_ptr<MultiFab>>& conv,
 		     Vector<std::unique_ptr<MultiFab>>& vel, 
 		     Real time);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // Diffusion
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////
-
-  void ComputeDivTau(int lev, MultiFab& divtau, Vector<std::unique_ptr<MultiFab>>& vel);
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   //

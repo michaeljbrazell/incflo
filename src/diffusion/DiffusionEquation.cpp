@@ -77,6 +77,7 @@ DiffusionEquation::DiffusionEquation(AmrCore* _amrcore,
 				MFInfo(), *(*ebfactory)[lev]));
   }
 
+  // FIXME -- make more general...
   // Fill the Dirichlet values on the EB surface
   for(int lev = 0; lev <= max_level; lev++) {
     // Get EB normal vector
@@ -138,6 +139,7 @@ void DiffusionEquation::readParameters()
     ParmParse pp("diffusion");
 
     pp.query("verbose", verbose);
+    pp.query("be_cn_theta", be_cn_theta);
     pp.query("mg_verbose", mg_verbose);
     pp.query("mg_cg_verbose", mg_cg_verbose);
     pp.query("mg_max_iter", mg_max_iter);
@@ -171,18 +173,20 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& vel,
   // Update the coefficients of the matrix going into the solve based on the current state of the
   // simulation. Recall that the relevant matrix is
   //
-  //      alpha a - beta div ( b grad )   <--->   rho - dt div ( eta grad )
-  //
+  //      alpha a - beta L_b   <--->   rho - dt L_eta
+  // where
+  //      L = div ( eta grad u + eta (grad u)^T )
+  // note bulk viscosity kappa=0
+  // 
   // So the constants and variable coefficients are:
   //
   //      alpha: 1
-  //      beta: dt
+  //      beta: dt*be_cn_theta
   //      a: ro
   //      b: eta
 
   // Set alpha and beta
-  // FIXME for theta
-  matrix.setScalars(1.0, dt);
+  matrix.setScalars(1.0, dt*be_cn_theta);
 
   for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
     // Compute the spatially varying b coefficients (on faces) to equal the apparent viscosity
@@ -209,7 +213,7 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& vel,
       // Multiply rhs by vel(dir) to get momentum
       // Note that vel holds the updated velocity:
       //
-      //      u_old + dt ( - u grad u + div ( eta (grad u)^T ) / rho - grad p / rho + gravity )
+      //      u_old + dt ( - u grad u + theta * divtau / rho - grad p / rho + gravity )
       //
       MultiFab::Multiply((*rhs[lev]), (*vel[lev]), dir, 0, 1, nghost);
 

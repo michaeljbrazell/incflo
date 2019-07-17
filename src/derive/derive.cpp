@@ -9,6 +9,7 @@ void incflo::UpdateDerivedQuantities()
 {
     BL_PROFILE("incflo::UpdateDerivedQuantities()");
 
+    //FIXME don't need to compute divu every time this fn is called
     ComputeDivU(cur_time);
     ComputeStrainrate();
     ComputeViscosity();
