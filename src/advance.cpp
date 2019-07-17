@@ -235,10 +235,10 @@ void incflo::ApplyPredictor()
   }
 
   // Compute the explicit advective term: conv_old = (-u dot grad(u))^n
-  ComputeUGradU(conv_old, vel_old, cur_time);
+  ComputeUGradU(conv_old, vel, cur_time);
 
   // FIXME
-  // Compute the explicit stress tensor using MLMG applyop (store in divtau_old)
+  // Compute the explicit stress tensor using MLMG applyop (store in divtau)
   //
   //
 
@@ -252,7 +252,7 @@ void incflo::ApplyPredictor()
 
     // Add the viscous terms
     // FIXME to work with theta
-    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
+    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau[lev], 0, 0, 3, 0);
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {
@@ -354,7 +354,7 @@ void incflo::ApplyCorrector()
 
     // Add the viscous terms
     // FIXME to work with theta
-    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
+    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau[lev], 0, 0, 3, 0);
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {

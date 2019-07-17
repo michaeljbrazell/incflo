@@ -26,9 +26,7 @@ void incflo::AllocateArrays(int lev)
 
   // Viscosity
   eta[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]));
-  eta_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]));
   eta[lev]->setVal(0.);
-  eta_old[lev]->setVal(0.);
 
   // Strain-rate magnitude
   strainrate[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]));
@@ -46,9 +44,7 @@ void incflo::AllocateArrays(int lev)
 
   // Divergence of stress tensor terms for diffusion equation
   divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-  divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
   divtau[lev]->setVal(0.);
-  divtau_old[lev]->setVal(0.);
 
   // Slopes in x-direction
   xslopes[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost, MFInfo(), *ebfactory[lev]));
@@ -153,12 +149,6 @@ void incflo::RegridArrays(int lev)
   eta_tmp->copy(*eta[lev], 0, 0, 1, 0, nghost);
   eta[lev] = std::move(eta_tmp);
 
-  std::unique_ptr<MultiFab> eta_old_tmp(new MultiFab(grids[lev], dmap[lev], 1, nghost,
-						     MFInfo(), *ebfactory[lev]));
-  eta_old_tmp->setVal(0.);
-  eta_old_tmp->copy(*eta_old[lev], 0, 0, 1, 0, nghost);
-  eta_old[lev] = std::move(eta_old_tmp);
-
   // Strain-rate magnitude
   std::unique_ptr<MultiFab> strainrate_tmp(new MultiFab(grids[lev], dmap[lev], 1, nghost,
 							MFInfo(), *ebfactory[lev]));
@@ -187,11 +177,6 @@ void incflo::RegridArrays(int lev)
 						    MFInfo(), *ebfactory[lev]));
   divtau[lev] = std::move(divtau_tmp);
   divtau[lev]->setVal(0.);
-
-  std::unique_ptr<MultiFab> divtau_old_tmp(new MultiFab(grids[lev], dmap[lev], 3, nghost,
-							MFInfo(), *ebfactory[lev]));
-  divtau_old[lev] = std::move(divtau_old_tmp);
-  divtau_old[lev]->setVal(0.);
 
   // Slopes in x-direction
   std::unique_ptr<MultiFab> xslopes_tmp(new MultiFab(grids[lev], dmap[lev], 3, nghost, 
@@ -291,7 +276,6 @@ void incflo::ResizeArrays()
 
   // Derived quantities: viscosity, strainrate, vorticity, div(u)
   eta.resize(max_level + 1);
-  eta_old.resize(max_level + 1);
   strainrate.resize(max_level + 1);
   vort.resize(max_level + 1);
   divu.resize(max_level + 1);
@@ -300,7 +284,6 @@ void incflo::ResizeArrays()
   conv.resize(max_level + 1);
   conv_old.resize(max_level + 1);
   divtau.resize(max_level + 1);
-  divtau_old.resize(max_level + 1);
 
   // MAC velocities used for defining convective term
   m_u_mac.resize(max_level + 1);
