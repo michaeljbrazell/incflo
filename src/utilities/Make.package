@@ -1,5 +1,4 @@
 f90EXE_sources += constant_mod.f90  
-f90EXE_sources += divop_mod.f90  
 
 CEXE_sources += divop_conv.cpp
 CEXE_sources += diagnostics.cpp  
