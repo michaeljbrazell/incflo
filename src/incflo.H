@@ -119,6 +119,8 @@ public:
   // get CUDA to compile
       void ComputeStrainrate();
       void ComputeVorticity();
+	void ComputeViscosity();
+
 	void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
 	void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
       void incflo_compute_ugradu( Box& bx,
@@ -220,7 +222,6 @@ private:
 
     void UpdateDerivedQuantities();
 	void ComputeDivU(Real time);
-	void ComputeViscosity();
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //

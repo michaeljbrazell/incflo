@@ -1,7 +1,25 @@
 #include <AMReX_Box.H>
 
 #include <incflo.H>
-#include <rheology_F.H>
+
+AMREX_GPU_HOST_DEVICE Real expterm(Real nu)
+{
+   // 
+   // Compute the exponential term:
+   //
+   //  ( 1 - exp(-nu) ) / nu ,
+   //
+   // making sure to avoid overflow for small nu by using the exponential Taylor series
+   //
+  Real result; 
+  if (nu < 1.0e-14) {
+    result = 1. - 0.5 * nu + nu*nu / 6.0 - nu*nu*nu / 24.0;
+  }  
+  else {
+    result = (1. - exp(-nu)) / nu;
+  }   
+  return result;
+}
 
 void incflo::ComputeViscosity()
 {
@@ -35,7 +53,7 @@ void incflo::ComputeViscosity()
 	      else if (fluid_model_num == _powerlaw) {
 		// Power-law fluid: 
 		//   eta = mu dot(gamma)^(n-1)
-		viscosity = mu * sr**(n - 1.);
+		viscosity = mu * pow(sr,(n - 1.));
 	      }
 	      else if (fluid_model_num == _bingham) {
 		// Papanastasiou-regularised Bingham fluid: 
@@ -47,13 +65,13 @@ void incflo::ComputeViscosity()
 		// Papanastasiou-regularised Herschel-Bulkley fluid: 
 		//   eta = (mu dot(gamma)^n + tau_0) (1 - exp(-dot(gamma) / eps)) / dot(gamma)
 		nu = sr / papa_reg;
-		viscosity = (mu * sr**n + tau_0) * expterm(nu) / papa_reg;
+		viscosity = (mu * pow(sr,n) + tau_0) * expterm(nu) / papa_reg;
 	      }
 	      else if (fluid_model_num == _smd) {
 		// de Souza Mendes - Dutra fluid: 
 		//   eta = (mu dot(gamma)^n + tau_0) (1 - exp(-eta_0 dot(gamma) / tau_0)) / dot(gamma)
 		nu = eta_0 * sr / tau_0;
-		viscosity = (mu * sr**n + tau_0) * expterm(nu) * eta_0 / tau_0;
+		viscosity = (mu * pow(sr,n) + tau_0) * expterm(nu) * eta_0 / tau_0;
 	      }
 	      else {		
 		// This should have been caught earlier, but doesn't hurt to double check
