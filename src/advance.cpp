@@ -48,7 +48,7 @@ void incflo::Advance()
 
   // Backup velocity to old
   for(int lev = 0; lev <= finest_level; lev++) {
-    MultiFab::Copy(*vel_o[lev], *vel[lev], 0, 0, vel[lev]->nComp(), vel_o[lev]->nGrow());
+    MultiFab::Copy(*vel_old[lev], *vel[lev], 0, 0, vel[lev]->nComp(), vel_old[lev]->nGrow());
   }
 
   ApplyPredictor();
@@ -234,24 +234,25 @@ void incflo::ApplyPredictor()
     PrintMaxValues(new_time);
   }
 
-  // Compute the explicit advective term: conv = - u dot grad(u)
-  ComputeUGradU(conv_old, vel_o, cur_time);
+  // Compute the explicit advective term: conv_old = (-u dot grad(u))^n
+  ComputeUGradU(conv_old, vel_old, cur_time);
+
+  // FIXME
+  // Compute the explicit stress tensor using MLMG applyop (store in divtau_old)
+  //
+  //
 
   // Update the derived quantities, notably strain-rate tensor and viscosity
   UpdateDerivedQuantities();
 
   for(int lev = 0; lev <= finest_level; lev++) {
-    // Save this value of eta as eta_old for use in the corrector as well
-    MultiFab::Copy(*eta_old[lev], *eta[lev], 0, 0, eta[lev]->nComp(), eta_old[lev]->nGrow());
-
-    // compute only the off-diagonal terms here
-    ComputeDivTau(lev, *divtau_old[lev], vel_o);
-
+    
     // First add the convective term
     MultiFab::Saxpy(*vel[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
-    // Add the viscous terms         
-    MultiFab::Saxpy(*vel[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
+    // Add the viscous terms
+    // FIXME to work with theta
+    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {
@@ -339,23 +340,21 @@ void incflo::ApplyCorrector()
     PrintMaxValues(new_time);
   }
 
-  // Compute the explicit advective term: conv = - u dot grad(u)
+  // Compute the explicit advective term: conv = (-u dot grad(u))^pred
   ComputeUGradU(conv, vel, new_time);
 
   // Update the derived quantities, notably strain-rate tensor and viscosity
   UpdateDerivedQuantities();
 
   for(int lev = 0; lev <= finest_level; lev++) {
-    // compute only the off-diagonal terms here
-    ComputeDivTau(lev, *divtau[lev], vel);
 
     // First add the convective terms
-    MultiFab::LinComb(*vel[lev], 1.0, *vel_o[lev], 0, dt / 2.0, *conv[lev], 0, 0, 3, 0);
+    MultiFab::LinComb(*vel[lev], 1.0, *vel_old[lev], 0, dt / 2.0, *conv[lev], 0, 0, 3, 0);
     MultiFab::Saxpy(*vel[lev], dt / 2.0, *conv_old[lev], 0, 0, 3, 0);
 
-    // Add the viscous terms         
-    MultiFab::Saxpy(*vel[lev], dt / 2.0, *divtau[lev], 0, 0, 3, 0);
-    MultiFab::Saxpy(*vel[lev], dt / 2.0, *divtau_old[lev], 0, 0, 3, 0);
+    // Add the viscous terms
+    // FIXME to work with theta
+    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {
@@ -377,9 +376,6 @@ void incflo::ApplyCorrector()
     for(int dir = 0; dir < 3; dir++) {
       MultiFab::Divide(*vel[lev], (*ro[lev]), 0, dir, 1, vel[lev]->nGrow());
     }
-
-    // Take eta as the average of the predictor and corrector values
-    MultiFab::LinComb(*eta[lev], 0.5, *eta_old[lev], 0, 0.5, *eta[lev], 0, 0, 1, 0);
   }
   FillVelocityBC(new_time, 0);
 
@@ -421,7 +417,7 @@ bool incflo::SteadyStateReached()
   diff_vel.resize(finest_level + 1);
   for(int lev = 0; lev <= finest_level; lev++) {
     diff_vel[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-    MultiFab::LinComb(*diff_vel[lev], 1.0, *vel[lev], 0, -1.0, *vel_o[lev], 0, 0, 3, 0);
+    MultiFab::LinComb(*diff_vel[lev], 1.0, *vel[lev], 0, -1.0, *vel_old[lev], 0, 0, 3, 0);
     
     Real max_change = 0.0;
     Real max_relchange = 0.0;
@@ -435,7 +431,7 @@ bool incflo::SteadyStateReached()
       // sum(abs(u^{n+1}-u^n)) / sum(abs(u^n))
       // TODO: this gives zero often, check for bug
       Real norm1_diff = Norm(diff_vel, lev, i, 1);
-      Real norm1_old = Norm(vel_o, lev, i, 1);
+      Real norm1_old = Norm(vel_old, lev, i, 1);
       Real relchange = norm1_old > 1.0e-15 ? norm1_diff / norm1_old : 0.0;
       max_relchange = amrex::max(max_relchange, relchange);
     }

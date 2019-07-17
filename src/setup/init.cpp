@@ -379,10 +379,10 @@ void incflo::InitialIterations()
     FillScalarBC();
     FillVelocityBC(cur_time, 0);
 
-    // Copy vel into vel_o
+    // Copy vel into vel_old
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        MultiFab::Copy(*vel_o[lev], *vel[lev], 0, 0, vel[lev]->nComp(), vel_o[lev]->nGrow());
+        MultiFab::Copy(*vel_old[lev], *vel[lev], 0, 0, vel[lev]->nComp(), vel_old[lev]->nGrow());
     }
 
 	for(int iter = 0; iter < initial_iterations; ++iter)
@@ -394,7 +394,7 @@ void incflo::InitialIterations()
         for(int lev = 0; lev <= finest_level; lev++)
         {
             // Replace vel by the original values
-            MultiFab::Copy(*vel[lev], *vel_o[lev], 0, 0, vel[lev]->nComp(), vel[lev]->nGrow());
+            MultiFab::Copy(*vel[lev], *vel_old[lev], 0, 0, vel[lev]->nComp(), vel[lev]->nGrow());
         }
         // Reset the boundary values (necessary if they are time-dependent)
         FillVelocityBC(cur_time, 0);

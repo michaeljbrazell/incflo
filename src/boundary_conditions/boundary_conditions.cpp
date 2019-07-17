@@ -142,12 +142,12 @@ incflo::GetDataVel(int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& da
     }
     else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
     {
-        data.push_back(vel_o[lev].get());
+        data.push_back(vel_old[lev].get());
         datatime.push_back(t_old[lev]);
     }
     else
     {
-        data.push_back(vel_o[lev].get());
+        data.push_back(vel_old[lev].get());
         data.push_back(vel[lev].get());
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);

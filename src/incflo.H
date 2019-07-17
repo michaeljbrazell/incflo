@@ -412,13 +412,13 @@ private:
     // Primary variables
 	Vector<std::unique_ptr<MultiFab>> ro;
 	Vector<std::unique_ptr<MultiFab>> vel;
-	Vector<std::unique_ptr<MultiFab>> vel_o;
+	Vector<std::unique_ptr<MultiFab>> vel_old;
 	Vector<std::unique_ptr<MultiFab>> p;
 	Vector<std::unique_ptr<MultiFab>> p0;
 	Vector<std::unique_ptr<MultiFab>> gp;
     // Derived variables TODO: to save memory, would only need to have 2 temporary variables
 	Vector<std::unique_ptr<MultiFab>> eta;
-    Vector<std::unique_ptr<MultiFab>> eta_old; 
+        Vector<std::unique_ptr<MultiFab>> eta_old; 
 	Vector<std::unique_ptr<MultiFab>> strainrate;
 	Vector<std::unique_ptr<MultiFab>> vort;
 	Vector<std::unique_ptr<MultiFab>> divu;
