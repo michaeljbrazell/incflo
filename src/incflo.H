@@ -119,7 +119,7 @@ public:
   void ComputeVorticity();
   void ComputeViscosity();
 
-  void ComputeVelocitySlopes(int lev, MultiFab& Sborder);
+  void ComputeVelocitySlopes(int lev, MultiFab& vel_in);
   void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
   void incflo_compute_ugradu( Box& bx,
                               Vector< std::unique_ptr<MultiFab> >& conv,
