@@ -310,12 +310,14 @@ private:
   Real eta_0 = 0.0;
   // for GPUs which don't yet support strings
   int fluid_model_num;
-  const int _newtonian = 10;
-  const int _powerlaw = 20;
-  const int _bingham = 30;
-  const int _hb = 40;
-  const int _smd = 50;
-  ////
+  enum FluidModelNum {
+    newtonian = 10,
+    powerlaw = 20,
+    bingham = 30,
+    hb = 40,
+    smd = 50
+  };
+////
   
   //////////////////////////////////////////////////////////////////////////////////////////////
   //
