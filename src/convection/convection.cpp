@@ -78,7 +78,8 @@ void incflo::ComputeUGradU(Vector<std::unique_ptr<MultiFab>>& conv_in,
 //
 // TODO: Documentation
 //
-void incflo::ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel_in, Real time)
+void incflo::ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel_in,
+				    Real time)
 {
 	BL_PROFILE("incflo::ComputeVelocityAtFaces");
 
