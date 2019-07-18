@@ -59,25 +59,20 @@ void incflo::ComputeStrainrate()
 	Real idy = 1. / geom[lev].CellSize()[1];
 	Real idz = 1. / geom[lev].CellSize()[2];
 
-        // State with ghost cells
-        MultiFab Sborder(grids[lev], dmap[lev], vel[lev]->nComp(), nghost, 
-                         MFInfo(), *ebfactory[lev]);
-        FillPatchVel(lev, cur_time, Sborder, 0, Sborder.nComp());
-    
-        // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
-        MultiFab::Copy(*vel[lev], Sborder, 0, 0, vel[lev]->nComp(), vel[lev]->nGrow());
+        // fill ghost cells
+        FillPatchVel(lev, cur_time, *vel[lev], 0, (*vel[lev]).nComp());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for(MFIter mfi(Sborder, TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        for(MFIter mfi(*vel[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
             Box bx = mfi.tilebox();
 
             // This is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox& Sborder_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
-            const EBCellFlagFab& flags = Sborder_fab.getEBCellFlagFab();
+            const EBFArrayBox& veltemp_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+            const EBCellFlagFab& flags = veltemp_fab.getEBCellFlagFab();
 
 	    const auto& strainrate_fab = (strainrate[lev])->array(mfi);
 	    const auto& vel_fab = (vel[lev])->array(mfi);
