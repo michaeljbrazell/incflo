@@ -120,10 +120,11 @@ public:
   void ComputeViscosity();
 
   void ComputeVelocitySlopes(int lev, MultiFab& vel_in);
-  void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel, Real time);
+  void ComputeVelocityAtFaces(Vector<std::unique_ptr<MultiFab>>& vel_in,
+			      Real time);
   void incflo_compute_ugradu( Box& bx,
                               Vector< std::unique_ptr<MultiFab> >& conv,
-                              Vector< std::unique_ptr<MultiFab> >& vel,
+                              Vector< std::unique_ptr<MultiFab> >& vel_in,
                               Vector< std::unique_ptr<MultiFab> >& u_mac,
                               Vector< std::unique_ptr<MultiFab> >& v_mac,
                               Vector< std::unique_ptr<MultiFab> >& w_mac,
@@ -133,7 +134,7 @@ public:
 
   void incflo_compute_ugradu_eb( Box& bx,
                                  Vector< std::unique_ptr<MultiFab> >& conv,
-                                 Vector< std::unique_ptr<MultiFab> >& vel,
+                                 Vector< std::unique_ptr<MultiFab> >& vel_in,
                                  Vector< std::unique_ptr<MultiFab> >& u_mac,
                                  Vector< std::unique_ptr<MultiFab> >& v_mac,
                                  Vector< std::unique_ptr<MultiFab> >& w_mac,
@@ -201,7 +202,7 @@ private:
   //////////////////////////////////////////////////////////////////////////////////////////////
 
   void ComputeUGradU(Vector<std::unique_ptr<MultiFab>>& conv,
-		     Vector<std::unique_ptr<MultiFab>>& vel, 
+		     Vector<std::unique_ptr<MultiFab>>& vel_in, 
 		     Real time);
 
   //////////////////////////////////////////////////////////////////////////////////////////////

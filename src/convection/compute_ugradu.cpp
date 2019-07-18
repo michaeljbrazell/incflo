@@ -42,15 +42,15 @@ using namespace ugradu_aux;
 // Compute the three components of the convection term
 //
 void
-incflo::incflo_compute_ugradu( Box& bx,
-                           Vector< std::unique_ptr<MultiFab> >& conv, 
-                           Vector< std::unique_ptr<MultiFab> >& vel,
-                           Vector< std::unique_ptr<MultiFab> >& u_mac,
-                           Vector< std::unique_ptr<MultiFab> >& v_mac,
-                           Vector< std::unique_ptr<MultiFab> >& w_mac,
-                           MFIter* mfi,
-                           Box& domain,
-                           const int lev)
+incflo::incflo_compute_ugradu(Box& bx,
+			      Vector< std::unique_ptr<MultiFab> >& conv, 
+			      Vector< std::unique_ptr<MultiFab> >& vel_in,
+			      Vector< std::unique_ptr<MultiFab> >& u_mac,
+			      Vector< std::unique_ptr<MultiFab> >& v_mac,
+			      Vector< std::unique_ptr<MultiFab> >& w_mac,
+			      MFIter* mfi,
+			      Box& domain,
+			      const int lev)
 {
   const Real* dx = geom[lev].CellSize();
   const amrex::Dim3 dom_low = amrex::lbound(domain);
@@ -58,7 +58,7 @@ incflo::incflo_compute_ugradu( Box& bx,
 
   Array4<Real> const& ugradu = conv[lev]->array(*mfi); 
   
-  Array4<Real> const& velocity = vel[lev]->array(*mfi);
+  Array4<Real> const& velocity = vel_in[lev]->array(*mfi);
   
   Array4<Real> const& u = u_mac[lev]->array(*mfi);
   Array4<Real> const& v = v_mac[lev]->array(*mfi);
@@ -291,19 +291,19 @@ incflo::incflo_compute_ugradu( Box& bx,
 //
 void
 incflo::incflo_compute_ugradu_eb(Box& bx,
-                             Vector< std::unique_ptr<MultiFab> >& conv, 
-                             Vector< std::unique_ptr<MultiFab> >& vel,
-                             Vector< std::unique_ptr<MultiFab> >& u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& w_mac,
-                             MFIter* mfi,
-                             Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                             Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                             const MultiFab* volfrac,
-                             const MultiCutFab* bndrycent,
-                             Box& domain,
-                             const EBCellFlagFab& flags,
-                             const int lev)
+				 Vector< std::unique_ptr<MultiFab> >& conv, 
+				 Vector< std::unique_ptr<MultiFab> >& vel_in,
+				 Vector< std::unique_ptr<MultiFab> >& u_mac,
+				 Vector< std::unique_ptr<MultiFab> >& v_mac,
+				 Vector< std::unique_ptr<MultiFab> >& w_mac,
+				 MFIter* mfi,
+				 Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
+				 Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
+				 const MultiFab* volfrac,
+				 const MultiCutFab* bndrycent,
+				 Box& domain,
+				 const EBCellFlagFab& flags,
+				 const int lev)
 {
   AMREX_ASSERT_WITH_MESSAGE(nghost >= 4, "Compute divop_conv(): ng must be >= 4");
 
@@ -313,7 +313,7 @@ incflo::incflo_compute_ugradu_eb(Box& bx,
 
   Array4<Real> const& ugradu = conv[lev]->array(*mfi);
 
-  Array4<Real> const& velocity = vel[lev]->array(*mfi);
+  Array4<Real> const& velocity = vel_in[lev]->array(*mfi);
 
   Array4<const Real> const& areafrac_x = areafrac[0]->array(*mfi);
   Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
