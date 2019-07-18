@@ -47,6 +47,9 @@ public:
     // Set user-supplied solver settings (must be done every time step)
     void setSolverSettings(amrex::MLMG& solver);
 
+  void computeExplicitDivTau(const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
+			     amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out);
+  
     // Solve the diffusion equation, update vel
     void solve(amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel, 
                const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro, 
@@ -66,8 +69,7 @@ private:
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
-    //    amrex::MLEBTensorOp matrix;
-    amrex::MLEBABecLap matrix;
+    amrex::MLEBTensorOp matrix;
     amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> b;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> phi;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;

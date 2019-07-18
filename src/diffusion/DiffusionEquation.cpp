@@ -67,9 +67,9 @@ DiffusionEquation::DiffusionEquation(AmrCore* _amrcore,
       b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
 				     MFInfo(), *(*ebfactory)[lev]));
     }
-    phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost,
+    phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
 				MFInfo(), *(*ebfactory)[lev]));
-    rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost,
+    rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
 				MFInfo(), *(*ebfactory)[lev]));
     ueb[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, nghost,
 				MFInfo(), *(*ebfactory)[lev]));
@@ -160,6 +160,12 @@ void DiffusionEquation::updateInternals(AmrCore* amrcore_in,
     amrex::Abort();
 }
 
+void DiffusionEquation::computeExplicitDivTau(const Vector<std::unique_ptr<MultiFab>>& vel_in,
+					      Vector<std::unique_ptr<MultiFab>>& divtau_exp)
+{  
+  //  solver.apply(GetVecOfPtrs(divtau_out), GetVecOfPtrs(vel_in));
+}
+
 //
 // Solve the matrix equation
 //
@@ -172,7 +178,6 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& vel,
 
   // Update the coefficients of the matrix going into the solve based on the current state of the
   // simulation. Recall that the relevant matrix is
-  //
   //      alpha a - beta L_b   <--->   rho - dt L_eta
   // where
   //      L = div ( eta grad u + eta (grad u)^T )
@@ -197,56 +202,65 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& vel,
         
     // This sets the coefficients
     matrix.setACoeffs(lev, (*ro[lev]));
-    matrix.setBCoeffs(lev, GetArrOfConstPtrs(b[lev])); 
+    matrix.setShearViscosity(lev, GetArrOfConstPtrs(b[lev]));
+
+    // FIXME setEBShearViscosity?
   }
 
   if(verbose > 0) {
     amrex::Print() << "Diffusing velocity..." << std::endl; 
   }
-
-  // Loop over the velocity components
-  for(int dir = 0; dir < 3; dir++) {
-    for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
-      // Set the right hand side to equal rho
-      rhs[lev]->copy(*ro[lev], 0, 0, 1, nghost, nghost);
-
-      // Multiply rhs by vel(dir) to get momentum
-      // Note that vel holds the updated velocity:
-      //
-      //      u_old + dt ( - u grad u + theta * divtau / rho - grad p / rho + gravity )
-      //
-      MultiFab::Multiply((*rhs[lev]), (*vel[lev]), dir, 0, 1, nghost);
-
-      // By this point we must have filled the Dirichlet values of phi stored in ghost cells
-      phi[lev]->copy(*vel[lev], dir, 0, 1, nghost, nghost);
-      phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
-      matrix.setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
-
-      // This sets the coefficient on the wall and defines the wall as a Dirichlet bc
-      if(cyl_speed > 0.0 && dir == 0) {
-	matrix.setEBDirichlet(lev, *ueb[lev], *eta[lev]);
-      }
-      else if(cyl_speed > 0.0 && dir == 1) {
-	matrix.setEBDirichlet(lev, *veb[lev], *eta[lev]);
-      }
-      else {
-	matrix.setEBHomogDirichlet(lev, *eta[lev]);
-      }
+ 
+  // FIXME - Crank-Nicolson theta stuff
+  
+  for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
+      
+    // Set the right hand side to equal rho
+    for(int dir=0; dir<3; dir++) {
+      rhs[lev]->copy(*ro[lev], 0, dir, 1, nghost, nghost);
     }
+    
+    // Multiply rhs by vel to get momentum
+    // Note that vel holds the updated velocity:
+    //
+    //      u_old + dt ( - u grad u + theta * divtau / rho - grad p / rho + gravity )
+    //
+    MultiFab::Multiply((*rhs[lev]), (*vel[lev]), 0, 0, 3, nghost);
+	
+    // By this point we must have filled the Dirichlet values of phi stored in ghost cells
+    phi[lev]->copy(*vel[lev], 0, 0, 3, nghost, nghost);
+    phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
+    matrix.setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
 
-    MLMG solver(matrix);
-    setSolverSettings(solver);
-    solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
-
-    for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
-      phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
-      vel[lev]->copy(*phi[lev], 0, dir, 1, nghost, nghost);
+    // This sets the coefficient on the wall and defines the wall as a Dirichlet bc
+    // FIXME for tensor solver
+    /*
+    if(cyl_speed > 0.0 && dir == 0) {
+      matrix.setEBDirichlet(lev, *ueb[lev], *eta[lev]);
     }
-
-    if(verbose > 0) {
-      amrex::Print() << " done!" << std::endl;
+    else if(cyl_speed > 0.0 && dir == 1) {
+      matrix.setEBDirichlet(lev, *veb[lev], *eta[lev]);
     }
+    else {
+      matrix.setEBHomogDirichlet(lev, *eta[lev]);
+    }
+    */
+
   }
+
+  MLMG solver(matrix);
+  setSolverSettings(solver);
+  solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
+
+  for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
+    phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
+    vel[lev]->copy(*phi[lev], 0, 0, 3, nghost, nghost);
+  }
+
+  if(verbose > 0) {
+    amrex::Print() << " done!" << std::endl;
+  }
+  
 }
 
 //
