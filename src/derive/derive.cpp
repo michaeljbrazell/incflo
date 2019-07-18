@@ -53,8 +53,6 @@ void incflo::ComputeStrainrate()
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        Box domain(geom[lev].Domain());
-
 	Real idx = 1. / geom[lev].CellSize()[0];
 	Real idy = 1. / geom[lev].CellSize()[1];
 	Real idz = 1. / geom[lev].CellSize()[2];
@@ -125,34 +123,28 @@ void incflo::ComputeStrainrate()
 
 void incflo::ComputeVorticity()
 {
-	BL_PROFILE("incflo::ComputeVorticity");
+  BL_PROFILE("incflo::ComputeVorticity");
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        Box domain(geom[lev].Domain());
         Real idx = 1.0 / geom[lev].CellSize()[0];
         Real idy = 1.0 / geom[lev].CellSize()[1];
         Real idz = 1.0 / geom[lev].CellSize()[2];
+	
+        // fill ghost cells
+        FillPatchVel(lev, cur_time, *vel[lev], 0, vel[lev]->nComp());
 
-        // State with ghost cells
-        MultiFab Sborder(grids[lev], dmap[lev], vel[lev]->nComp(), nghost, 
-                         MFInfo(), *ebfactory[lev]);
-        FillPatchVel(lev, cur_time, Sborder, 0, Sborder.nComp());
-    
-        // Copy each FAB back from Sborder into the vel array, complete with filled ghost cells
-        MultiFab::Copy (*vel[lev], Sborder, 0, 0, vel[lev]->nComp(), vel[lev]->nGrow());
-
-    #ifdef _OPENMP
-    #pragma omp parallel if (Gpu::notInLaunchRegion())
-    #endif
-        for(MFIter mfi(Sborder, TilingIfNotGPU()); mfi.isValid(); ++mfi)
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for(MFIter mfi(*vel[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
             Box bx = mfi.tilebox();
 
             // This is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox& Sborder_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
-            const EBCellFlagFab& flags = Sborder_fab.getEBCellFlagFab();
+            const EBFArrayBox& veltemp_fab = static_cast<EBFArrayBox const&>((*vel[lev])[mfi]);
+            const EBCellFlagFab& flags = veltemp_fab.getEBCellFlagFab();
 
             if (flags.getType(bx) == FabType::covered)
             {
@@ -162,7 +154,7 @@ void incflo::ComputeVorticity()
             {
                 if(flags.getType(amrex::grow(bx, 0)) == FabType::regular)
                 {
-                    const auto& vel_arr = Sborder.array(mfi);
+                    const auto& vel_arr = vel[lev]->array(mfi);
                     const auto& vort_arr = vort[lev]->array(mfi);
 
 		    AMREX_HOST_DEVICE_FOR_3D(bx, i, j, k,
