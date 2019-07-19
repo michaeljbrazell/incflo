@@ -14,8 +14,11 @@ extern "C"
 {
 #endif
 
-amrex::Real get_my_huge();
+  amrex::Real get_my_huge();
 
+  int get_dim_bc();
+  
+  
 #ifdef __cplusplus
 }
 #endif

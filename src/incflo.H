@@ -115,6 +115,9 @@ public:
   void GetInputBCs();
 
   // get CUDA to compile
+  void set_velocity_bcs(Real* time, const int lev, FArrayBox& vel_fab,
+			const Box& domain, const int* extrap_dir_bcs);
+
   void ComputeStrainrate();
   void ComputeVorticity();
   void ComputeViscosity();
@@ -150,6 +153,10 @@ public:
   //
 protected:
   const BcList bc_list;
+
+  amrex::Cuda::ManagedVector<amrex::Real> m_bc_u;
+  amrex::Cuda::ManagedVector<amrex::Real> m_bc_v;
+  amrex::Cuda::ManagedVector<amrex::Real> m_bc_w;
   
 private:
   //////////////////////////////////////////////////////////////////////////////////////////////

@@ -3,12 +3,16 @@
 
 #include <incflo.H>
 #include <derive_F.H>
+#include <constants.H>
 
 // Constructor
 // Note that geometry on all levels has already been defined in the AmrCore constructor,
 // which the incflo class inherits from.
 incflo::incflo()
   : bc_list(10,11,20,100) //TODO fix this
+  , m_bc_u(get_dim_bc()+1, 0)
+  , m_bc_v(get_dim_bc()+1, 0)
+  , m_bc_w(get_dim_bc()+1, 0)
 {
   // Read inputs file using ParmParse
   ReadParameters();

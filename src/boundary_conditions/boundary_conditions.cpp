@@ -69,18 +69,11 @@ inline void VelFillBox(Box const& bx, Array4<amrex::Real> const& dest,
     const int* bc_klo_ptr = incflo_for_fillpatching->get_bc_klo_ptr(lev);
     const int* bc_khi_ptr = incflo_for_fillpatching->get_bc_khi_ptr(lev);
 
-    int nghost = incflo_for_fillpatching->get_nghost();
-    int probtype = incflo_for_fillpatching->get_probtype();
-
     FArrayBox dest_fab(dest);
 
-    set_velocity_bcs(&time, 
-                     dest_fab.dataPtr(), dest_fab.loVect(), dest_fab.hiVect(),
-                     bc_ilo_ptr, bc_ihi_ptr, 
-                     bc_jlo_ptr, bc_jhi_ptr, 
-                     bc_klo_ptr, bc_khi_ptr, 
-                     domain.loVect(), domain.hiVect(),
-                     &nghost, &extrap_dir_bcs, &probtype);
+    incflo_for_fillpatching->set_velocity_bcs(&time, lev, dest_fab,
+			     domain, &extrap_dir_bcs);
+
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -175,13 +168,8 @@ void incflo::FillVelocityBC(Real time, int extrap_dir_bcs)
 #endif
         for(MFIter mfi(*vel[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            set_velocity_bcs(&time, 
-                             BL_TO_FORTRAN_ANYD((*vel[lev])[mfi]),
-                             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                             domain.loVect(), domain.hiVect(),
-                             &nghost, &extrap_dir_bcs, &probtype);
+	  set_velocity_bcs(&time, lev, (*vel[lev])[mfi],
+			   domain, &extrap_dir_bcs);
         }
         EB_set_covered(*vel[lev], covered_val);
         

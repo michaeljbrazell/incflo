@@ -68,4 +68,9 @@ contains
      return
    end function get_my_huge
 
+   integer(c_int) function get_dim_bc() bind(C)
+     get_dim_bc = dim_bc
+     return
+   end function get_dim_bc
+
 end module constant
