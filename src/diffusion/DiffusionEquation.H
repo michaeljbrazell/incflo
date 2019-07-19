@@ -47,13 +47,14 @@ public:
     // Set user-supplied solver settings (must be done every time step)
     void setSolverSettings(amrex::MLMG& solver);
 
-  void computeExplicitDivTau(const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
-			     amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out);
+    void computeDivTau(amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
+		       amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
+		       amrex::Vector<amrex::Real>& time);
   
     // Solve the diffusion equation, update vel
-    void solve(amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel, 
+    void solve(amrex::Vector<std::unique_ptr<amrex::MultiFab>>& velocity,
                const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro, 
-               const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta, 
+               const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta,
                amrex::Real dt);
 
 private:

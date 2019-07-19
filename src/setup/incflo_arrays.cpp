@@ -43,8 +43,8 @@ void incflo::AllocateArrays(int lev)
   conv_old[lev]->setVal(0.);
 
   // Divergence of stress tensor terms for diffusion equation
-  divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-  divtau[lev]->setVal(0.);
+  divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
+  divtau_old[lev]->setVal(0.);
 
   // Slopes in x-direction
   xslopes[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost, MFInfo(), *ebfactory[lev]));
@@ -175,8 +175,8 @@ void incflo::RegridArrays(int lev)
   // Divergence of stress tensor terms 
   std::unique_ptr<MultiFab> divtau_tmp(new MultiFab(grids[lev], dmap[lev], 3, nghost,
 						    MFInfo(), *ebfactory[lev]));
-  divtau[lev] = std::move(divtau_tmp);
-  divtau[lev]->setVal(0.);
+  divtau_old[lev] = std::move(divtau_tmp);
+  divtau_old[lev]->setVal(0.);
 
   // Slopes in x-direction
   std::unique_ptr<MultiFab> xslopes_tmp(new MultiFab(grids[lev], dmap[lev], 3, nghost, 
@@ -283,7 +283,7 @@ void incflo::ResizeArrays()
   // Convective terms u grad u 
   conv.resize(max_level + 1);
   conv_old.resize(max_level + 1);
-  divtau.resize(max_level + 1);
+  divtau_old.resize(max_level + 1);
 
   // MAC velocities used for defining convective term
   m_u_mac.resize(max_level + 1);
