@@ -183,7 +183,7 @@ void incflo::ComputeDt(int initialisation)
 //
 // Apply predictor:
 //
-// "theta" controls whether the velocity update is FE (1), CN (0.5), or BE (0)
+// "be_cntheta" controls whether the velocity update is BE (1) or CN (0.5)
 //
 //  1. Use u^n to compute
 //
@@ -191,7 +191,7 @@ void incflo::ComputeDt(int initialisation)
 //      eta^n     = eta( u^n ) 
 //      divtau^n  = div( eta^n ((grad u^n) + (grad u^n)^T) ) / rho
 //
-//      rhs = u^n + dt * ( conv^n + theta * divtau^n )
+//      rhs = u^n + dt * ( conv^n + (1-be_cn_theta) * divtau^n )
 //
 //  2. Add explicit forcing term i.e. gravity + lagged pressure gradient
 //
@@ -202,7 +202,7 @@ void incflo::ComputeDt(int initialisation)
 //
 //  3. Solve diffusion equation for u* 
 //
-//     ( 1 - (1-theta) * dt / rho * div ( eta^n grad ) ) u* = rhs
+//     ( 1 - be_cn_theta * dt / rho * div ( eta^n grad ) ) u* = rhs
 //
 //  4. Apply projection
 //     
@@ -229,6 +229,8 @@ void incflo::ApplyPredictor()
   // We use the new ime value for things computed on the "*" state
   Real new_time = cur_time + dt;
 
+  Real be_cn_theta = (*diffusion_equation).be_cn_theta;
+
   if(incflo_verbose > 2) {
     amrex::Print() << "Before predictor step:" << std::endl;
     PrintMaxValues(new_time);
@@ -237,10 +239,10 @@ void incflo::ApplyPredictor()
   // Compute the explicit advective term: conv_old = (-u dot grad(u))^n
   ComputeUGradU(conv_old, vel, cur_time);
 
-  // FIXME
   // Compute the explicit stress tensor using MLMG applyop (store in divtau_old)
-  //
-  //
+  if (be_cn_theta != 1.) {
+    diffusion_equation->computeDivTau(divtau_old,vel_old,ro,eta,t_old);
+  }
 
   // Update the derived quantities, notably strain-rate tensor and viscosity
   UpdateDerivedQuantities();
@@ -251,8 +253,9 @@ void incflo::ApplyPredictor()
     MultiFab::Saxpy(*vel[lev], dt, *conv_old[lev], 0, 0, 3, 0);
 
     // Add the viscous terms
-    // FIXME to work with theta
-    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
+    if (be_cn_theta != 1.) {
+      MultiFab::Saxpy(*vel[lev], dt * (1.-be_cn_theta), *divtau_old[lev], 0, 0, 3, 0);
+    }
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {
@@ -297,7 +300,7 @@ void incflo::ApplyPredictor()
 //      conv^pred    = (-u grad u)^pred
 //      eta^pred     = eta( vel^pred )
 //
-//     rhs = u^n + dt * ( 0.5*(conv^n + conv^pred) + theta * divtau^n )
+//     rhs = u^n + dt * ( 0.5*(conv^n + conv^pred) + (1-be_cn_theta) * divtau^n )
 //
 //  2. Add explicit forcing term i.e. gravity + lagged pressure gradient
 //
@@ -308,7 +311,7 @@ void incflo::ApplyPredictor()
 //
 //  3. Solve implicit diffusion equation for u* 
 //
-//     ( 1 - (1-theta) * dt / rho * div ( eta^pred grad ) ) u* = rhs
+//     ( 1 - be_cn_theta * dt / rho * div ( eta^pred grad ) ) u* = rhs
 //
 //  4. Apply projection
 //     
@@ -335,6 +338,8 @@ void incflo::ApplyCorrector()
   // We use the new time value for things computed on the "*" state
   Real new_time = cur_time + dt;
 
+  Real be_cn_theta = (*diffusion_equation).be_cn_theta;
+  
   if(incflo_verbose > 2) {
     amrex::Print() << "Before corrector step:" << std::endl;
     PrintMaxValues(new_time);
@@ -353,8 +358,9 @@ void incflo::ApplyCorrector()
     MultiFab::Saxpy(*vel[lev], dt / 2.0, *conv_old[lev], 0, 0, 3, 0);
 
     // Add the viscous terms
-    // FIXME to work with theta
-    // MultiFab::Saxpy(*vel[lev], dt * theta, *divtau_old[lev], 0, 0, 3, 0);
+    if (be_cn_theta != 1.) {
+      MultiFab::Saxpy(*vel[lev], dt * (1.-be_cn_theta), *divtau_old[lev], 0, 0, 3, 0);
+    }
 
     // Add gravitational forces
     for(int dir = 0; dir < 3; dir++) {

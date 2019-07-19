@@ -138,7 +138,7 @@ DiffusionEquation::~DiffusionEquation()
 void DiffusionEquation::readParameters()
 {
     ParmParse pp("diffusion");
-
+    
     pp.query("verbose", verbose);
     pp.query("be_cn_theta", be_cn_theta);
     pp.query("mg_verbose", mg_verbose);
@@ -164,9 +164,10 @@ void DiffusionEquation::updateInternals(AmrCore* amrcore_in,
 
 void DiffusionEquation::computeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
 				      Vector<std::unique_ptr<MultiFab>>& velocity,
+				      const Vector<std::unique_ptr<MultiFab>>& ro,
+				      const Vector<std::unique_ptr<MultiFab>>& eta,
 				      Vector<Real>& time)
 {  
-
   Vector<Geometry> geom = amrcore->Geom();
   Vector<BoxArray> grids = amrcore->boxArray();
   Vector<DistributionMapping> dmap = amrcore->DistributionMap();
@@ -179,39 +180,32 @@ void DiffusionEquation::computeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_
 					MFInfo(), *(*ebfactory)[lev]));
      divtau_aux[lev]->setVal(0.0);
    }
-
-   /*
-   
-   // Swap ghost cells and apply BCs to velocity
-   for (int lev = 0; lev <= max_level; lev++) {
-     FillPatchVel(lev, time[lev], *velocity[lev], 0, (*velocity[lev]).nComp());
-   }
-
    // Return div (mu grad)) phi 
    matrix.setScalars(0.0, -1.0);
 
    // Compute the coefficients
    for (int lev = 0; lev <= max_level; lev++)
    {
-       average_cellcenter_to_face( GetArrOfPtrs(bcoeff_cc[lev]), *mu_g[lev], geom[lev] );
+       average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta[lev], geom[lev] );
+       for(int dir = 0; dir < 3; dir++) {
+	 b[lev][dir]->FillBoundary(geom[lev].periodicity());
+       }
 
-       bcoeff_cc[lev][0] -> FillBoundary(geom[lev].periodicity());
-       bcoeff_cc[lev][1] -> FillBoundary(geom[lev].periodicity());
-       bcoeff_cc[lev][2] -> FillBoundary(geom[lev].periodicity());
-
-       matrix.setShearViscosity(lev, GetArrOfConstPtrs(bcoeff_cc[lev]));
-       matrix.setEBShearViscosity(lev, (*mu_g[lev]));
+       matrix.setShearViscosity(lev, GetArrOfConstPtrs(b[lev]));
+       matrix.setEBShearViscosity(lev, (*eta[lev]));
        matrix.setLevelBC(lev, GetVecOfConstPtrs(velocity)[lev] );
    }
 
-   solver.apply(GetVecOfPtrs(divtau_aux), GetVecOfPtrs(velocity));
+   MLMG solver(matrix);
 
+   solver.apply(GetVecOfPtrs(divtau_aux), GetVecOfPtrs(velocity));
    for (int lev = 0; lev <= max_level; lev++)
    {
       divtau_aux[lev]->FillBoundary(geom[lev].periodicity());
       MultiFab::Copy(*divtau_out[lev],*divtau_aux[lev],0,0,3,0);
    }
 
+   /*
    const amrex::MultiFab* volfrac;
 
    const int cyclic_x = geom[0].isPeriodic(0) ? 1 : 0;
@@ -298,16 +292,13 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& velocity,
     // This sets the coefficients
     matrix.setACoeffs(lev, (*ro[lev]));
     matrix.setShearViscosity(lev, GetArrOfConstPtrs(b[lev]));
-
-    // FIXME setEBShearViscosity?
+    matrix.setEBShearViscosity(lev, (*eta[lev]));
   }
 
   if(verbose > 0) {
     amrex::Print() << "Diffusing velocity..." << std::endl; 
   }
  
-  // FIXME - Crank-Nicolson theta stuff
-  
   for(int lev = 0; lev <= amrcore->finestLevel(); lev++) {
       
     // Set rhs equal to ro
@@ -317,9 +308,8 @@ void DiffusionEquation::solve(Vector<std::unique_ptr<MultiFab>>& velocity,
     
     // Note that coming in to this routine, velocity holds
     //
-    //      u_old + dt ( - u grad u - grad p / rho + gravity )
+    //      u_old + dt ( - u grad u - grad p / rho + (1-be_cn_theta) * divtau / rho + gravity )
     //
-    // FIXME it needs to contain theta * divtau / rho, or add it in below
     // Multiply rhs by velocity to get momentum
     
     MultiFab::Multiply((*rhs[lev]), (*velocity[lev]), 0, 0, 3, nghost);

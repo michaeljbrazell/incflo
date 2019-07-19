@@ -49,6 +49,8 @@ public:
 
     void computeDivTau(amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
 		       amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
+		       const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta,
+		       const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro,
 		       amrex::Vector<amrex::Real>& time);
   
     // Solve the diffusion equation, update vel
@@ -56,6 +58,9 @@ public:
                const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro, 
                const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta,
                amrex::Real dt);
+
+    // backward euler or crank-nicholson
+    amrex::Real be_cn_theta = 1.0;
 
 private:
     // AmrCore data 
@@ -82,9 +87,6 @@ private:
   
     // DiffusionEquation verbosity
     int verbose = 0;
-
-    // backward euler or crank-nicholson
-    amrex::Real be_cn_theta = 1.0;
   
     // Options to control MLMG behavior
     int mg_verbose = 0;
