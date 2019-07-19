@@ -150,6 +150,8 @@ public:
                                  const EBCellFlagFab& flags,
                                  const int lev);
 
+  void FillPatchVel(int lev, Real time, MultiFab& mf, int icomp, int ncomp);
+
   //
 protected:
   const BcList bc_list;
@@ -424,7 +426,7 @@ private:
   // Helper variables 
   Vector<std::unique_ptr<MultiFab>> conv; 
   Vector<std::unique_ptr<MultiFab>> conv_old; 
-  Vector<std::unique_ptr<MultiFab>> divtau; 
+  Vector<std::unique_ptr<MultiFab>> divtau_old; 
   Vector<std::unique_ptr<MultiFab>> xslopes;
   Vector<std::unique_ptr<MultiFab>> yslopes;
   Vector<std::unique_ptr<MultiFab>> zslopes;
@@ -437,8 +439,6 @@ private:
   // Not yet classified
   //
   //////////////////////////////////////////////////////////////////////////////////////////////
-
-  void FillPatchVel(int lev, Real time, MultiFab& mf, int icomp, int ncomp);
   void GetDataVel(int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& datatime);
 
   void AverageDown();
