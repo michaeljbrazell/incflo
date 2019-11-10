@@ -89,8 +89,8 @@ void incflo::ReadParameters()
 
 	pp.query("fixed_dt", fixed_dt);
 	pp.query("cfl", cfl);
-        if (cfl > 0.5)
-            amrex::Abort("We currently require cfl <= 0.5 with the current advection scheme");
+//      if (cfl > 0.5)
+//          amrex::Abort("We currently require cfl <= 0.5 with the current advection scheme");
 
         // Physics
 	pp.queryarr("delp", delp, 0, AMREX_SPACEDIM);
