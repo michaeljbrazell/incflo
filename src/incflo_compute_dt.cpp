@@ -53,7 +53,7 @@ void incflo::ComputeDt(int initialisation, bool explicit_diffusion)
 
     // Viscous term
     Real diff_cfl = 0;
-    if (explicit_diffusion) 
+    // if (explicit_diffusion) 
          diff_cfl = 2.0 * etamax / rhomin * (idx * idx + idy * idy + idz * idz);
 
     // Forcing term
