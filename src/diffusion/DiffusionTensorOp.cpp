@@ -143,6 +143,13 @@ DiffusionTensorOp::diffuse_velocity (Vector<MultiFab*> const& velocity,
             [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
             {
                 rhs_a(i,j,k,n) = rho_a(i,j,k) * vel_a(i,j,k,n);
+		if (i==44 && j==0 && k==0 && n==0){
+		  printf("vel(%+i,%+i,%+i,%i) = %+15.14e \n",i,j-1,k-1,n,vel_a(i,j-1,k-1,n));
+		  int kk = 7;
+		  printf("vel(%+i,%+i,%+i,%i) = %+15.14e \n",i,j,kk,n,vel_a(i,j,kk,n));
+		  printf("vel(%+i,%+i,%+i,%i) = %+15.14e \n",i,j-1,kk,n,vel_a(i,j-1,kk,n));
+		}
+		/////////////
             });
         }
 
@@ -182,6 +189,55 @@ DiffusionTensorOp::diffuse_velocity (Vector<MultiFab*> const& velocity,
     mlmg.setCGVerbose(m_mg_cg_verbose);
 
     mlmg.solve(velocity, GetVecOfConstPtrs(rhs), m_mg_rtol, m_mg_atol);
+
+        //////////////////////////////////////////
+    /// fixme check fluxes
+    Print()<<"Checking fluxes ... \n";
+    Print()<<"Vel ng = "<<velocity[0]->nGrow()<<"\n";
+    {
+      int lev = 0;
+      MultiFab* tfo[AMREX_SPACEDIM];
+      for (int dir=0; dir<AMREX_SPACEDIM; dir++){
+	BoxArray ba = velocity[lev]->boxArray();
+	ba.surroundingNodes(dir);
+	const DistributionMapping& dm = velocity[lev]->DistributionMap();
+	tfo[dir]=new MultiFab(ba,dm,AMREX_SPACEDIM,0,MFInfo(),velocity[lev]->Factory());
+      }
+      std::array<MultiFab*, AMREX_SPACEDIM> fp{AMREX_D_DECL(tfo[0],tfo[1],tfo[2])};
+      mlmg.getFluxes({fp},velocity,MLLinOp::Location::FaceCentroid);
+    //   VisMF::Write(*fp[0],"flxxB");
+    //   VisMF::Write(*fp[1],"flxyB");
+    //   VisMF::Write(*fp[2],"flxzB");
+    //   	  {
+    // 	    // read in result MF from unaltered version of code
+    // 	    std::string name2="flxx"; //+std::to_string(count);
+    // 	    std::cout << "Reading " << name2 << std::endl;
+    // 	    MultiFab mf2(fp[0]->boxArray(),fp[0]->DistributionMap(),fp[0]->nComp(),fp[0]->nGrow());
+    // 	    VisMF::Read(mf2, name2);
+    // 	    MultiFab mfdiff(mf2.boxArray(), mf2.DistributionMap(), mf2.nComp(), mf2.nGrow());
+    // 	    // Diff local MF and MF from unaltered code 
+    // 	    MultiFab::Copy(mfdiff, *fp[0], 0, 0, mfdiff.nComp(), mfdiff.nGrow());
+    // 	    mfdiff.minus(mf2, 0, mfdiff.nComp(), mfdiff.nGrow());
+
+    // 	    for (int icomp = 0; icomp < mfdiff.nComp(); ++icomp) {
+    // 	      Print()<< "Min and max of the diff are " << mfdiff.min(icomp,mf2.nGrow()) 
+    // 	  		<< " and " << mfdiff.max(icomp,mf2.nGrow());
+    // 	      if (mfdiff.nComp() > 1) {
+    // 	  	Print()<< " for component " << icomp;
+    // 	      }
+    // 	      Print()<< "." << std::endl;
+    // 	    }
+    // 	    // write out difference MF for viewing: amrvis -mf 
+    // 	    std::cout << "Writing mfdiff" << std::endl;
+    // 	    VisMF::Write(mfdiff, "flxxdiff"); //+std::to_string(count));
+    // 	  }
+    // 	  //amrex::Abort("Check fluxes");
+    // 	  ///////////////////////////
+
+    }
+    amrex::Abort("Check me!!!...\n");
+    ///////////////////////
+
 }
 
 void DiffusionTensorOp::compute_divtau (Vector<MultiFab*> const& a_divtau,
