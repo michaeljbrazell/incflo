@@ -111,6 +111,15 @@ void incflo::prob_init_fluid (int lev)
                                   ld.tracer.array(mfi),
                                   domain, dx, problo, probhi);
         }
+        else if (35  == m_probtype)
+        {
+            init_abl(vbx, gbx,
+                     ld.p.array(mfi),
+                     ld.velocity.array(mfi),
+                     ld.density.array(mfi),
+                     ld.tracer.array(mfi),
+                     domain, dx, problo, probhi);
+        }
         else
         {
             amrex::Abort("prob_init_fluid: unknown m_probtype");
@@ -499,4 +508,51 @@ void incflo::init_plane_poiseuille (Box const& vbx, Box const& gbx,
     {
         amrex::Abort("Unknown plane poiseuille m_probtype");
     };
+}
+
+
+void incflo::init_abl (Box const& vbx, Box const& gbx,
+                       Array4<Real> const& p,
+                       Array4<Real> const& vel,
+                       Array4<Real> const& density,
+                       Array4<Real> const& tracer,
+                       Box const& domain,
+                       GpuArray<Real, AMREX_SPACEDIM> const& dx,
+                       GpuArray<Real, AMREX_SPACEDIM> const& problo,
+                       GpuArray<Real, AMREX_SPACEDIM> const& probhi)
+{
+    Real u = m_ic_u;
+    Real v = m_ic_v;
+
+    const Real zRefHeight = .32;
+    const Real pi = std::acos(-1.0);
+    const Real aval = 4.0*2.0*pi/(probhi[1] - problo[1]);
+    const Real bval = 4.0*2.0*pi/(probhi[0] - problo[0]);
+    const Real ufac = std::exp(0.5)/zRefHeight;
+    const Real vfac = std::exp(0.5)/zRefHeight;
+    
+    amrex::ParallelFor(vbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        const Real x = problo[0] + (i+0.5)*dx[0];
+        const Real y = problo[1] + (j+0.5)*dx[1];
+        const Real z = problo[2] + (k+0.5)*dx[2];
+        
+        density(i,j,k) = 1.0;
+
+        vel(i,j,k,0) = u;
+        vel(i,j,k,1) = v;
+        vel(i,j,k,2) = 0.0;
+
+        const Real zl = z/zRefHeight;
+        const Real damp = std::exp(-0.5*zl*zl);
+        
+        vel(i,j,k,1) += vfac*damp*z*std::sin(bval*x);
+        
+        tracer(i,j,k,0) = 0.0;
+        if(z >= .65 and z < .75)
+            tracer(i,j,k,0) = -10*(z-.65);
+        else if(z >= .75)
+            tracer(i,j,k,0) = -10*(.75-.65);
+        
+    });
 }

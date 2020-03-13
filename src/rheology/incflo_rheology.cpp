@@ -125,4 +125,18 @@ void incflo::compute_viscosity (Vector<MultiFab*> const& vel_eta,
             mf->setVal(m_mu_s[n], n, 1, nghost);
         }
     }
+    if(m_probtype == 35){
+        for (auto mf : tra_eta) {
+            for (int n = 0; n < m_ntrac; ++n) {
+                mf->setVal(0.0, n, 1, nghost);
+            }
+        }
+
+        if(m_ntrac && m_advect_tracer){
+            for (int lev = 0; lev <= finest_level; ++lev) {
+                // tra_eta += iPrandtl_turb*vel_eta
+                MultiFab::Saxpy(*tra_eta[lev], 3.0, *vel_eta[lev], 0, 0, 1, nghost);
+            }
+        }
+    }
 }
